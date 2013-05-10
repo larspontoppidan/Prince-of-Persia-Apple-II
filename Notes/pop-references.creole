@@ -5,3 +5,4 @@ Apple IIe Technical Reference Manual [[http://www.amazon.com/Apple-IIe-technical
 Apple IIgs Firmware Reference Manual [[http://www.amazon.com/Apple-IIgs-Firmware-Reference-Computer/dp/0201177447]]\\
 Beneath Apple ProDOS [[http://www.amazon.com/Beneath-Apple-Prodos-Don-Worth/dp/0912985054]]\\
 Merlin 8/16 User Manual [[http://www.apple-iigs.info/doc/fichiers/merlin816.pdf]]\\
+RW18 Hacking Notes: [[http://boutillon.free.fr/Underground/Cours/Cours_GDF/Gdf19/Gdf19.html | "French Original"]] or [[https://groups.google.com/forum/?fromgroups=#!topic/comp.sys.apple2/gT2mrxjqens | "English Translation"]]\\
