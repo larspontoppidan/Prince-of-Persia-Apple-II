@@ -32,7 +32,7 @@ entry   jmp RW18
 
 * Beginning of zero page area used by RW18.
 * The next 16 bytes will be saved on RW18 entry
-* and restore on RW18 exit so the game can use
+* and restored on RW18 exit so the game can use
 * them as well.
 zpArea  equ *
 
@@ -155,7 +155,7 @@ adrChk  db $96
 * Inputs:
 *   X - Slot number for disk drive. Placed there
 *       by call to zpInit.
-*   Y - Number of additional SYNC bytes to write.
+*   Y - Number of SYNC bytes to write - 1.
 *   slot - Set to indicate disk drive slot.
 *   adrBeg - Set to 0 for sector 5 and 12 for
 *            other sectors to indicate how much
@@ -173,13 +173,13 @@ adrChk  db $96
 *   pg2Ptr - Points to third page of user data.
 *-------------------------------------------------
 wrSect  
-* Write out SYNC byte.
+* Enable write to disk and write first SYNC byte.
         lda #$ff
         sta $c08f,x
         ora $c08c,x
         rol auxByte ; delay
 * Enter loop to produce additional SYNC bytes.
-* Y register specifies desired count.
+* Y register specifies desired count - 1.
 :1      nop ; delay
         jsr rts
         jsr rts
@@ -357,10 +357,10 @@ wrTrack
         lda encTab,y
         sta adrSec
 * If sector is 5:
-*   Set Y, additional SYNC bytes, to $c8
+*   Set Y, SYNC bytes, to $c8 + 1
 *   Set adrBeg to $00 to use full address field
 * If sector is 0 - 4:
-*   Set Y, additional SYNC bytes, to $04
+*   Set Y, SYNC bytes, to $04 + 1
 *   Set adrBeg to $0c to use short address field
         cpy #$05
         beq :1
@@ -370,13 +370,11 @@ wrTrack
 :1      lda #$00
         ldy #$c8
 :2      sta adrBeg
-* Flip soft-switches to prepare for writing to
-* disk. X was set to slot # by earlier call to
+* Sense write protect and return with carry set if
+* it is. X was set to slot # by earlier call to
 * zpInit.
         lda $c08d,x
         lda $c08e,x
-* I think these are just here to introduce a
-* delay.
         sec
         bmi :rts
 * Now write out this sector's data.
@@ -927,12 +925,13 @@ tmpTrk  equ zpArea+2
 * If trackdiff <= 12 then 
 * delayIndex = Y = trackdiff
         tay
-* Turn required stepper phases on.
+* Turn required stepper phase on while previous
+* phase is still on, half stepping.
 :4      sec
         jsr :phas1
         lda dlytbl1,y
         jsr :delay
-* Turn required stepper phases off.
+* Turn prevous stepper phase off.
         lda savTrk
         clc
         jsr :phas2
@@ -941,7 +940,7 @@ tmpTrk  equ zpArea+2
 * Increment iteration count and loop.
         inc i
         bne :loop
-* Final delay and fall-through to turn phases
+* Final delay and fall-through to turn last phase
 * off.
 :done   jsr :delay
         clc
@@ -1140,7 +1139,7 @@ CMseek
         bcc :cont
 * If rdTrack encountered an error such as would
 * happen if not positioned over an actual RW18
-* track, then step head in 160 times to make sure
+* track, then step head out 160/2 times to make sure
 * it is positioned at track 0.
         lda #$a0
         sta currTrk
