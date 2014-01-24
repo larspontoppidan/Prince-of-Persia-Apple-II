@@ -66,6 +66,15 @@ There are some important things to note about the current state of this build sy
   "Insert Prince of Persia Disk".  It should indicate the side of the disk it wants but I have left the code configured
   to build for 3.5" disks so it displays this message instead.  Turning 3.5" disk support off would turn on 5.25"
   copy protection and this would cause problems.
+
+
+==Running Disk Images
+* On OS X I have been able to use the Virtual ][ emulator to load and play both the 3.5" and 5.25" disk images created
+  by this build.  They should work with other emulators as well.
+* ADTPro can be used to copy the PrinceOfPersia_3.5.hdv disk image to 3.5" media on real Apple ][ hardware.  ADTPro
+  doesn't work with the 5.25" nibble disk images though.
+* Both the 3.5" and 5.25" disk images can be loaded on real Apple ][ hardware using a
+  [[http://dreher.net/?s=projects/CFforAppleII&c=projects/CFforAppleII/main.php | CFFA3000 expansion card]].
   
 
 ==Make Targets/Variables
