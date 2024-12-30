@@ -1,7 +1,20 @@
-# Archived - June 10th, 2021
-This fork is no longer under active development.
 
-[How to Build](https://github.com/adamgreen/Prince-of-Persia-Apple-II/blob/build/Notes/pop-build.creole#quick-start)
+
+*Prince of Persia Smoothmod fork for stable game timing on faster Apple II variants.*
+
+This is a fork of AdamGreens fork of the Prince-of-Persia-Apple-II code graciously released by Jordan Mechner. Please read Mechner's readme below.
+
+### Building
+
+Adam Green added build tools to facilitate building the project on modern PCs. In this repository a Dockerfile and scripts were added to utilize docker for building the project in a fully isolated and reproducible manner.
+
+How to build (intended for a Linux terminal)
+
+- Clone repository
+- Run `docker-create.sh` to create the docker image. Follow instructions provided by the script. This only needs to be done once.
+- Run `docker-build.sh` to build using the image.
+
+## Readme by Jordan Mechner
 
 Some background: This archive contains the source code for the original Prince of Persia game that I wrote on the Apple II, in 6502 assembly language, between 1985-89. The game was first released by Broderbund Software in 1989, and is part of the ongoing Ubisoft game franchise.
 
