@@ -209,8 +209,8 @@ ResumeGame
 
  lda #1
  sta timerequest ;show time remaining
- lda #$80
- sta yellowflag ;pass copy prot. test
+; lda #$80
+; sta yellowflag ;pass copy prot. test
  lda SavLevel
  sta level
  sta NextLevel
@@ -396,7 +396,7 @@ MainLoop
  cmp level
  beq MainLoop ;Continue until we change levels
 
- jsr yellowcheck ;copy protect!
+; jsr yellowcheck ;copy protect!
 
  jmp LoadNextLevel
 
@@ -1546,7 +1546,7 @@ dispmsg
 flipdisk
  do ThreeFive
  lda #1
- sta purpleflag ;pass copy-protect!
+; sta purpleflag ;pass copy-protect!
  rts
  fin
 
@@ -1556,13 +1556,13 @@ flipdisk
 
 * 1st copy protection check
 
- lda redherring
- eor redherring2
- cmp #POPside1 ;passed 1st check?
- beq :1
- lda #POPside1
- sta BBundID
-  jmp attractmode
+; lda redherring
+; eor redherring2
+; cmp #POPside1 ;passed 1st check?
+; beq :1
+; lda #POPside1
+; sta BBundID
+;  jmp attractmode
 
 * Passed copy protection--continue
 
@@ -1704,13 +1704,13 @@ wtlessflash
 * (call right before 1st princess cut)
 * In: A = next level
 *-------------------------------
-yellowcheck
- cmp #2
- bne ]rts
- jsr showtext
- ldx #10
- jmp yellow ;in gamebg
- ;sets yellowflag ($7c) hibit
+;yellowcheck
+; cmp #2
+; bne ]rts
+; jsr showtext
+; ldx #10
+; jmp yellow ;in gamebg
+; ;sets yellowflag ($7c) hibit
 
 *-------------------------------
 *

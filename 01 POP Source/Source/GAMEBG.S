@@ -63,8 +63,8 @@ org = $4c00
 *
 *-------------------------------
  do ThreeFive
-YELLOW lda #$80
- sta yellowflag
+YELLOW ; lda #$80
+ ; sta yellowflag
  rts
 
  else

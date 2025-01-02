@@ -392,8 +392,8 @@ Char ds $10
 Kid ds $10
 Shad ds $10
 FCharVars ds 12
-yellowflag ds 1
-timebomb ds 1
+yellowflag ds 1 ; $7C copy protection routines might write here
+timebomb ds 1  ; free 
 justblocked ds 1
 gdtimer ds 1
 framepoint ds 2
@@ -481,7 +481,7 @@ clrU ds 1
 clrD ds 1
 clrbtn ds 1
 Fsword ds 1
-purpleflag ds 1 ;$da
+purpleflag ds 1 ;$da  copy protection routines might write here
 msgtimer ds 1
 MaxOppStr ds 1
 guardprog ds 1
@@ -512,7 +512,7 @@ skipmessage ds 1
 savezp ds 32
 MSset ds 1
 rjumpflag ds 1
-redherring ds 1
+redherring ds 1 ; $23B copy protection routines might write here
 
  dum $300
 

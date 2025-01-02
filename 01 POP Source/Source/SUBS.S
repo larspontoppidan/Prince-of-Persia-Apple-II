@@ -1116,10 +1116,11 @@ startP7
  sta CharY
  lda #Pwaiting
  ldx #1
- cpx purpleflag
- beq :ok
- lda #120 ;crash (copy protect)
-:ok jsr jumpseq
+; cpx purpleflag
+; beq :ok
+; lda #120 ;crash (copy protect)
+;:ok 
+ jsr jumpseq
  jmp animchar
 
 startM7
@@ -1590,11 +1591,11 @@ STARTKID1
  cmp #7 ;WTLESS level
  bne :notsp
 
- lda yellowflag ;should be -
- bmi :yelok
- lda #$40
- sta timebomb ;2nd level copy protection
-:yelok
+; lda yellowflag ;should be -
+; bmi :yelok
+; lda #$40
+; sta timebomb ;2nd level copy protection
+;:yelok
  lda CharScrn
  cmp #17
  bne :notsp

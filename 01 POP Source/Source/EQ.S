@@ -462,7 +462,7 @@ binfoTRK ds 1
 binfoREG ds 1
 level ds 1
 BBundID ds 1
-redherring2 ds 1
+redherring2 ds 1 ; free
 pausetemp ds 1
 recheck0 ds 1
 

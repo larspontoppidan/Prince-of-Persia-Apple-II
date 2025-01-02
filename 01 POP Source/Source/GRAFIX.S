@@ -1,5 +1,5 @@
 * grafix
-CopyProtect = 1
+CopyProtect = 0
 EditorDisk = 0
 org = $400
  tr on
