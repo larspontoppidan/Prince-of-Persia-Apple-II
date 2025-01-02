@@ -248,7 +248,7 @@ initgame
  sta SPEED
 
  ; smoothmod: GameSpeed (+1 or +2 depending on sword drawn) is the number of
- ; vblanks in a game cycle.
+ ; vblanks in a game cycle. Note: Ctrl+t XORs this var with 1 to toggle speed up
  lda #3
  sta GameSpeed
  rts

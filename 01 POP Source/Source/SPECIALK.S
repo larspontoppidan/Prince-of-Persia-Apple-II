@@ -102,6 +102,8 @@ kreturn = "m"-CTRL ;editor disk only
 kshowtime = " "
 kflipx = "x"-CTRL
 kflipy = "y"-CTRL
+; smoothmod: Ctrl+t toggles "turbo" making the game cycle one frame faster
+kturbospeed = "t"-CTRL
 
 *  Special keys (development)
 
@@ -245,7 +247,6 @@ KEYS2 sta keypress
 
  jsr shortentime
 :2
- fin
 
 * Special keys
 
@@ -341,9 +342,16 @@ LegitKeys
  sta SavLevel
  jmp DoSaveGame
 
+:18 cmp #kturbospeed
+ bne :99
+ lda #1
+ eor GameSpeed ; Toggle GameSpeed 3 or 2 by xoring 1
+ sta GameSpeed
+ rts
+
 * Show time left
 
-:18 cmp #kshowtime
+:99 cmp #kshowtime
  bne :19
  lda #3
  sta timerequest
