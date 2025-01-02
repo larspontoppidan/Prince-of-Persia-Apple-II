@@ -213,7 +213,7 @@ xmovemusic ds 3
 whoop ds 3
 vblank ds 3
 
-vbli ds 3
+waitcycle ds 3 ; vbli previously
 
  dum redbufs
 

@@ -393,7 +393,7 @@ Kid ds $10
 Shad ds $10
 FCharVars ds 12
 yellowflag ds 1 ; $7C copy protection routines might write here
-timebomb ds 1  ; free 
+GameSpeed ds 1 ; previously timebomb ds 1  ; free
 justblocked ds 1
 gdtimer ds 1
 framepoint ds 2

@@ -246,6 +246,11 @@ initgame
 
  lda #1 ;no delay
  sta SPEED
+
+ ; smoothmod: GameSpeed (+1 or +2 depending on sword drawn) is the number of
+ ; vblanks in a game cycle.
+ lda #3
+ sta GameSpeed
  rts
 
 *-------------------------------
@@ -608,6 +613,10 @@ FrameAdv
  bne :cut
 
  jsr DoFast
+
+ ; smoothmod: Enforce cycle timing here
+ jsr waitcycle
+
  jmp PageFlip ;Update current screen...
 
 :cut jmp DoCleanCut ;or draw new screen from scratch
@@ -871,7 +880,7 @@ UseQuick = 0
 
  do UseQuick
 
-DoQuickCut
+DoQuickCut ; this is never used
  jsr fastspeed ;IIGS
 
  lda #0

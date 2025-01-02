@@ -1,6 +1,11 @@
 * grafix
 CopyProtect = 0
 EditorDisk = 0
+; Smoothmod does not attempt to autodetect machine type.
+; Program must be compiled for a specific machine set by flags:
+; (NOTE these appear in multiple source files!)
+AppleIIcp = 1
+AppleIIgs = 0
 org = $400
  tr on
  lst off
@@ -107,9 +112,9 @@ org = $400
  jmp LOADALTSET
  jmp XMOVEMUSIC
  jmp WHOOP
-VBLvect jmp VBLANK ;changed by InitVBLANK if IIc
+ jmp VBLANK ; previously: changed by InitVBLANK if IIc
 
- jmp VBLI ;VBL interrupt
+ jmp WAITCYCLE ; previously: VBLI ;VBL interrupt
 
 *-------------------------------
  lst
@@ -1934,48 +1939,85 @@ MUSICKEYS
 ]rts rts
 
 *===============================
-vblflag ds 1
+
 *-------------------------------
 *
-* Wait for vertical blank (IIe/IIGS)
+* Wait for vertical blank
 *
 *-------------------------------
+
 VBLANK
+ do AppleIIcp
+; Utilize vbcount from interrupt. Make sure it's running:
+ sei
+ sta $c079 ;enable IOU access
+ sta $c05b ;enable VBL int
+ sta $c078 ;disable IOU access
+ cli
+
+; Wait until vbcount changes
+ lda VbCount
+:loop1 cmp VbCount
+ beq  :loop1 
+
+ rts
+
+ else
+
 :loop1 lda $c019
  bpl :loop1
 :loop lda $c019
  bmi :loop ;wait for beginning of VBL interval
 ]rts rts
 
+ fin
+
 *-------------------------------
 *
-* Wait for vertical blank (IIc)
+* smoothmod: Vertical blank ISR for IIcp
+*
+* A note about the interrupt handler implementation. PoP uses both Aux and Main 
+* RAM banks available in higher memory Apple IIs. These RAM banks switch the 
+* entire memory space and PoP may swap between them at any time making it
+* challenging to install an interrupt handler that can fire at any time. The 
+* solution used here is to install the handler in both RAM banks, at the same 
+* address, running the same code that thus increments a counter in the currently
+* active RAM bank. The correct vblank count has to be taken as the sum of these
+* two counters. This is dealt with in WaitCycle.
+*
+* The address of the interrupt handler was chosen by observing memory usage 
+* with a debugger and finding an unused spot in all banking configurations. 
+* The address of the counters needed one more consideration. The game code 
+* must be able to reach both counters to read and write them. The first two
+* pages are best for that as they can be mapped Aux or Main RAM without 
+* affecting the rest of the memory space (by ALTZPoff/on). A free spot somewhat 
+* into the stack page was chosen for the counters.
 *
 *-------------------------------
-VBLANKIIc
- cli ;enable interrupts
 
-:loop1 bit vblflag
- bpl :loop1 ;wait for vblflag = 1
- lsr vblflag ;...& set vblflag = 0
+VbIsrAddr = $2E0 ; Vertical blank interrupt handler address (both AUX and MAIN)
+VbCount = $120   ; Vertical blank counter (both AUX and MAIN)
+ 
+ do AppleIIcp
+VbIsr
+ bit $c019 ; Acknowledge the interrupt
+ sta $c079 ; enable IOU access
+ sta $c05b ; enable VBL int
+ sta $c078 ; disable IOU access
+ inc VbCount ; Increment vblank count, note this might be either in AUX or MAIN RAM
+ rti
 
-:loop2 bit vblflag
- bpl :loop2
- lsr vblflag
-
- sei
+; Move VbIsr code to VbIsrAddr
+MoveVbIsr
+ ldy #0
+:loop lda VbIsr,y
+ sta #VbIsrAddr,y
+ iny
+ cpy #16 ; ISR is 16 bytes
+ bne :loop
  rts
 
-* Interrupt jumps to ($FFFE) which points back to VBLI
-
-VBLI
- bit $c019
- sta $c079 ;enable IOU access
- sta $c05b ;enable VBL int
- sta $c078 ;disable IOU access
- sec
- ror vblflag ;set hibit
-:notvbl rti
+ fin
 
 *-------------------------------
 *
@@ -1984,22 +2026,92 @@ VBLI
 *
 *-------------------------------
 InitVBLANK
- lda $FBC0
- bne ]rts ;not a IIc--use VBLANK
+; Smoothmod does not attempt to autodetect machine type
+; lda $FBC0
+; bne ]rts ;not a IIc--use VBLANK
+
+ do AppleIIcp
+ ; For Apple IIcp install the VbIsr
+ sta RAMWRTmain
+
+ jsr MoveVbIsr
 
  sta RAMWRTaux
 
- lda #VBLANKIIc
- sta VBLvect+1
- lda #>VBLANKIIc
- sta VBLvect+2
+ jsr MoveVbIsr
+
+;lda #VBLANKIIc
+;sta VBLvect+1
+;lda #>VBLANKIIc
+;sta VBLvect+2
 
  sei ;disable interrupts
  sta $c079 ;enable IOU access
  sta $c05b ;enable VBL int
  sta $c078 ;disable IOU access
+ fin
 
 ]rts rts
+
+*-------------------------------
+*
+* WaitCycle - wait for a number of vblanks since last invocation
+*
+* The number of vblanks to wait is determined by the GameSpeed variable 
+* (modifiable by Ctrl-t) and whether the kid has drawn the sword. Unmodded 
+* Apple II PoP runs the game loop at unlimited speed and when fighting, the CPU
+* has a lot to do resulting in a slower pace compared to other game activities.
+* Introducing a stable cycle timing thus speeds up sword fighting more making 
+* it harder. To mitigate, WaitCycle waits for one more vblank when kid has the
+* sword up. The same is done in the MS-DOS and MAC II PoP versions, see:
+* https://forum.princed.org/viewtopic.php?t=3009&start=15
+*
+* Note: It was verified that it does in fact happen during play, that vblank 
+* interrupts fire with Main RAM selected incrementing the counter in that RAM.
+* No way around the trip to Main RAM to gather vblank counts there.
+* 
+*-------------------------------
+
+WAITCYCLE 
+ do AppleIIcp
+ ldx #0
+ sei           ; With interrupts off ...
+ sta ALTZPoff  ; Go to Main ram
+ lda VbCount   ; Grab vblank count
+ stx VbCount   ; Zero that counter
+ sta ALTZPon   ; Back to Aux ram (default for the code)
+ clc
+ adc VbCount   ; Add to the counter there
+ sta VbCount   ; which will be tracked in the following
+ cli           ; Enable interrupts again
+ 
+ ; Early exit in case VbCount is negative (above $7F). Generally, if VbCount is
+ ; higher than target cycle count WAITCYCLE should exit immediately. Now, if 
+ ; VbCount minus target cycle count becomes more than $80 the cmp result is
+ ; negative and loopc would wait for ~$80 ish frames until the difference rolls
+ ; around. The branch here avoids that case:
+ bmi :skip
+
+ ; Calculate target cycle count, which is GameSpeed variable +2 with sword up
+ ; or +1 with sword down:
+ lda CharSword
+ cmp #2 
+ beq :swordup ; Sword up?
+ lda #1       ; No, add 1
+:swordup      ; Yes, let A stay 2
+ clc
+ adc GameSpeed
+
+ ; Wait until vbcount reaches target cycle count
+:loopc
+ cmp VbCount
+ bpl :loopc
+
+:skip
+ lda #0
+ sta VbCount ; Reset the count
+ fin
+ rts
 
 *-------------------------------
 *
@@ -2013,29 +2125,34 @@ InitVBLANK
 *
 *-------------------------------
 CHECKIIGS
- do EditorDisk
- else
+; Smoothmod does not attempt to autodetect machine type.
+; Thus routine is used for general initialization of timing
+; related matters 
 
- bit USEROM
- bit USEROM
+; bit USEROM
+; bit USEROM
 
- lda $FBB3
- cmp #6
- bne * ;II/II+/III--we shouldn't even be here
- sec
- jsr $FE1F
- bcs :notGS
+; lda $FBB3
+; cmp #6
+; bne * ;II/II+/III--we shouldn't even be here
+; sec
+; jsr $FE1F
+; bcs :notGS
 
- lda #1
- bne :set
+; lda #1
+; bne :set
 
-:notGS lda #0
-:set sta IIGS
+; :notGS lda #0
+; :set sta IIGS
 
  jsr InitVBLANK
 
- bit RWBANK2
- bit RWBANK2
+; Set IIGS to 0 for now
+ lda #0
+ sta IIGS
+
+; bit RWBANK2
+; bit RWBANK2
 ]rts rts
 
 *-------------------------------

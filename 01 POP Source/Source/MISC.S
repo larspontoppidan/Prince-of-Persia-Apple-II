@@ -64,6 +64,9 @@ POPside2 = $ad
 
 FirstSideB = 3
 
+; smoothmod: See description of Apple IIcp vblank interrupt in GRAFIX.S
+VbIsrAddr = $2E0
+
 *-------------------------------
 *
 * Vanish character
@@ -169,16 +172,19 @@ MOVEAUXLC
 
 * & set VBL interrupts
 
- lda #vbli ;routine in GRAFIX
+; Setup interrupt vector in both aux and main RAM
+; The vectors are always configured but interrupts will 
+; only be enabled if needed (see GRAFIX.S)
+ lda #VbIsrAddr
  sta $FFFE
- lda #>vbli
+ lda #>VbIsrAddr
  sta $FFFF
 
  sta ALTZPoff
 
- lda #vbli
+ lda #VbIsrAddr
  sta $FFFE
- lda #>vbli
+ lda #>VbIsrAddr
  sta $FFFF ;set in main l.c. too
 
  rts

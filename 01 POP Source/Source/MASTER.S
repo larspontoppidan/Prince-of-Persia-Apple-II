@@ -1,7 +1,11 @@
 * master 3.5
 DemoDisk = 0
 FinalDisk = 1
-
+; Smoothmod does not attempt to autodetect machine type.
+; Program must be compiled for a specific machine set by flags:
+; (NOTE these appear in multiple source files!)
+AppleIIcp = 1
+AppleIIgs = 0
 org = $f880
  lst off
 *-------------------------------
@@ -889,8 +893,12 @@ Prolog2
 *
 *-------------------------------
 Epilog
- lda IIGS
- bne SuperEpilog ;super hi-res ending if IIGS
+ do AppleIIgs
+; lda IIGS
+; bne SuperEpilog ;super hi-res ending if IIGS
+ clc
+ bcc SuperEpilog
+ fin
 
  lda #pacEpilog
  sta RAMRDaux
@@ -924,6 +932,7 @@ unpacksplash
 *
 *-------------------------------
 SuperEpilog
+ do AppleIIgs 
  lda #1 ;aux
  jsr fadein ;fade in epilog screen
  jsr setaux
@@ -949,6 +958,7 @@ SuperEpilog
 
  jmp * ;and hang (because it's too much
 ;trouble to restart)
+ fin
 
 *-------------------------------
 *
@@ -1197,15 +1207,18 @@ LoadStage1B
 
  jsr loadmusic3 ;epilog
 
- lda IIGS
- bne :shires ;Super hi-res ending only if IIGS
-
+ do AppleIIgs
+; lda IIGS
+; bne :shires ;Super hi-res ending only if IIGS
+;:shires 
+ jsr loadsuper ;in unpack
+ jmp driveoff
+ else
  lda #18
  jsr ]lsub
  jmp driveoff
+ fin
 
-:shires jsr loadsuper ;in unpack
- jmp driveoff
 
 *-------------------------------
 *
