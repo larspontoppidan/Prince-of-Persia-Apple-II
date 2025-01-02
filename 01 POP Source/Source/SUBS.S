@@ -395,7 +395,8 @@ pstars
 *
 *-------------------------------
 PAGEFLIP
- jsr normspeed ;IIGS
+; smoothmod: normspeed/fastspeed are utilized differently, don't call here
+; jsr normspeed ;IIGS
  lda PAGE
  bne :1
 

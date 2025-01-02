@@ -1235,7 +1235,8 @@ PREAD
 *
 *-------------------------------
 SETCENTER
- jsr normspeed ;IIGS
+; smoothmod: normspeed/fastspeed are utilized differently, don't call here
+; jsr normspeed ;IIGS
 
  lda #$ff
  sta joyon ;Joystick on
@@ -1621,6 +1622,9 @@ INVERTY
 
 MINIT jsr ]bank1in
  jsr CALLMINIT
+ ; smoothmod: A song was just initialized.
+ ; Set standard Apple II speed for correct playback
+ jsr normspeed 
 ]bank2in bit RWBANK2
  bit RWBANK2
  rts
@@ -2147,9 +2151,10 @@ CHECKIIGS
 
  jsr InitVBLANK
 
-; Set IIGS to 0 for now
- lda #0
- sta IIGS
+; Set slownow to slow and call fastspeed, ensuring it will change system to fast
+ lda #1
+ sta SlowNow
+ jsr fastspeed
 
 ; bit RWBANK2
 ; bit RWBANK2
@@ -2157,40 +2162,118 @@ CHECKIIGS
 
 *-------------------------------
 *
-*  Temporarily set fast speed (IIGS)
+*  smoothmod: Set accelerated speed
+*  This will be called during normal game play, repeatedly
 *
 *-------------------------------
- xc
+SlowNow ds 1 ; If zero machine is currently fast
+
 FASTSPEED
- lda IIGS
- beq ]rts
+ ; Check current speed and toggle if necessary
+ lda SlowNow
+ beq ]rts ; borrow rts from above
+ ; We are slow, toggle
+ jmp ToggleAcc
 
- lda #$80
- tsb $C036 ;fast speed
-]rts rts
-
+; Original FASTSPEED:
+; xc
+; lda IIGS
+; beq ]rts
+;
+; lda #$80
+; tsb $C036 ;fast speed
+;]rts rts
 *-------------------------------
 *
-* Restore speed to normal (& bg & border to black)
+*  smoothmod: Set normal Apple II speed
+*  This will be called before music plays and cut scenes
 *
 *-------------------------------
+
 NORMSPEED
- lda IIGS
- beq ]rts
+ ; Check current speed and toggle if necessary
+ lda SlowNow
+ bne ]rts ; borrow rts from above
+ ; We are fast, toggle
+ jmp ToggleAcc
 
- xc
- lda $c034
- and #$f0
- sta $c034 ;black border
+; Original NORMSPEED: Restore speed to normal (& bg & border to black)
+; lda IIGS
+; beq ]rts
+;
+; xc
+; lda $c034
+; and #$f0
+; sta $c034 ;black border
+;
+; lda #$f0
+; sta $c022 ;black bg, white text
+;
+; lda #$80
+; trb $c036 ;normal speed
+; xc off
+;
+; rts
 
- lda #$f0
- sta $c022 ;black bg, white text
+*-------------------------------
+*
+*  Toggle accelerator (IIc+)
+*
+*-------------------------------
+ToggleAcc 
+ do AppleIIcp
+ ; The accelerator commands happen to mess with location $0 
+ ; which is used for the PAGE variable. We have to preserve it:
+ lda $00
+ pha
 
- lda #$80
- trb $c036 ;normal speed
- xc off
+ ; Dare not have interrupts enabled during this, disable:
+ sei
+ 
+ ; Activate ROM area
+ bit USEROM
+ bit USEROM
 
- rts
+ ; It seems unlocking and locking the accelerator every time
+ ; is required for the enable/disable commands to work:
+
+ LDA #$04	; Unlock accelerator (command code 4)
+ PHA 
+ JSR $C7C7
+
+; Here we want to toggle SlowNow var and send the right
+; command code, either: 1 enable accelerator or 2 disable
+;
+; If SlowNow is 0 (currently fast we want to go slow),
+; xor 1 and add 1, gets command 2 for disable
+;
+; If SlowNow is 1 (currently slow we want to go fast),
+; xor 1 and add 1, gets command 1 for enable:
+
+ LDA SlowNow
+ EOR #1
+ STA SlowNow
+ CLC
+ ADC #1
+
+ PHA
+ JSR $C7C7
+ 
+ LDA #$03	; Lock accelerator (command code 3)
+ PHA 
+ JSR $C7C7
+
+ ; Set BANK2 which is the default bank for this program
+ bit RWBANK2
+ bit RWBANK2
+
+ cli
+ 
+ ; Restore value of location 0
+ pla
+ sta $00
+ fin
+]rts rts
 
 *-------------------------------
 *
@@ -2200,24 +2283,24 @@ NORMSPEED
 *  Out: A = current setting
 *
 *-------------------------------
- xc
- xc
-getparam
- lda IIGS
- beq ]rts
-
- clc
- xce
- rep $30
- pha
- phy
- ldx #$0C03
- hex 22,00,00,E1 ;jsl E10000
- pla
- sec
- xce
- tay
- rts
+; xc
+; xc
+;getparam
+; lda IIGS
+; beq ]rts
+;
+; clc
+; xce
+; rep $30
+; pha
+; phy
+; ldx #$0C03
+; hex 22,00,00,E1 ;jsl E10000
+; pla
+; sec
+; xce
+; tay
+; rts
 
 *-------------------------------
 *
@@ -2226,20 +2309,20 @@ getparam
 * In: A = desired value, Y = location
 *
 *-------------------------------
-setparam
- clc
- xce
- rep $30
- and #$ff
- pha
- phy
- ldx #$B03
- hex 22,00,00,E1 ;jsl E10000
- sec
- xce
- rts
-
- xc off
+;setparam
+; clc
+; xce
+; rep $30
+; and #$ff
+; pha
+; phy
+; ldx #$B03
+; hex 22,00,00,E1 ;jsl E10000
+; sec
+; xce
+; rts
+;
+; xc off
 
 *-------------------------------
  lst

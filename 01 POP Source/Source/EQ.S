@@ -446,7 +446,7 @@ joyon ds 1
 develment ds 1
 keypress ds 1
 keydown ds 1
-IIGS ds 1
+IIGS ds 1 ; free  (machine detection is not attempted in smoothmod)
 
  dum $3c0
 

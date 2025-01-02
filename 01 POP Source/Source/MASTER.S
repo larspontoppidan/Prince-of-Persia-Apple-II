@@ -654,6 +654,9 @@ cutprincess1
  lda #pacProom
  jsr SngExpand
 
+ ; smoothmod: Ensure normal speed for correct cut scene timing
+ jsr normspeed
+
  lda #$40
  sta IMAGE+1
  lda #$20

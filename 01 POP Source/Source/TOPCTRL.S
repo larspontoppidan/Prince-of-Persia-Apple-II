@@ -369,6 +369,9 @@ RESTART
 *
 *-------------------------------
 MainLoop
+; smoothmod: In the main loop keep fastspeed enabled
+ jsr fastspeed
+
  jsr rnd
 
  lda #0
@@ -898,7 +901,8 @@ DoQuickCut ; this is never used
  else
 
 DoCleanCut
- jsr fastspeed ;IIGS
+; smoothmod: normspeed/fastspeed are utilized differently, don't call here
+; jsr fastspeed ;IIGS
 
  lda #$20
  sta PAGE
@@ -912,7 +916,8 @@ DoCleanCut
 
 ;jsr vblank2
  jsr PageFlip
- jmp normspeed
+; jmp normspeed
+ rts
 
  fin
 
