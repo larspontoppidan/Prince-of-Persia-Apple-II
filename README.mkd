@@ -4,6 +4,15 @@
 
 This is a fork of AdamGreens fork of the Prince-of-Persia-Apple-II code graciously released by Jordan Mechner. Please read Mechner's readme below.
 
+[Read more about the fork here](https://larsee.com/blog/2025/01/smooth-apple-prince/) including downloads of smoothmod releases.
+
+The fork provides a vertical blank based game timing that enables faster Apple II machines to run the game at a consistent speed without slow downs. 
+
+The fork currently supports:
+
+- Apple IIc Plus
+
+
 ### Building
 
 Adam Green added build tools to facilitate building the project on modern PCs. In this repository a Dockerfile and scripts were added to utilize docker for building the project in a fully isolated and reproducible manner.
@@ -13,6 +22,12 @@ How to build (intended for a Linux terminal)
 - Clone repository
 - Run `docker-create.sh` to create the docker image. Follow instructions provided by the script. This only needs to be done once.
 - Run `docker-build.sh` to build using the image.
+
+### Playing
+
+Building the repository generates a file named: `PrinceOfPersia_3.5.hdv`. To run this with MAME emulating an Apple IIc Plus, try:
+
+- `mame apple2cp -gameio joy -flop3 PrinceOfPersia_3.5.hdv`
 
 ## Readme by Jordan Mechner
 
